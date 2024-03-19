@@ -1,2 +1,2 @@
 # snlp_toxicity
-SNLP Kaggle Competition
+SNLP Kaggle Competition Aalto
