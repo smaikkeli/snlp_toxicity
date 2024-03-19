@@ -1,0 +1,12 @@
+name: snlp
+channels:
+  - defaults
+dependencies:
+  - python
+  - numpy
+  - pandas
+  - scikit-lean
+  - matplotlib
+  - seaborn
+  - pytorch
+  - jupyterlab
