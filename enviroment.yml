@@ -5,7 +5,7 @@ dependencies:
   - python
   - numpy
   - pandas
-  - scikit-lean
+  - scikit-learn
   - matplotlib
   - seaborn
   - pytorch
