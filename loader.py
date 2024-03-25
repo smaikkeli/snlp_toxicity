@@ -57,22 +57,17 @@ def unicodeToAscii(s):
 class ToxicityDataset(Dataset):
     """Toxicity dataset."""
 
-    def __init__(self, filename, id_col, text_col, label_col):
-        """
-        Arguments:
-            id - column for the example_id within the set
-            text - the text of the comment
-            label - binary label (1=Toxic/0=NonToxic)
-        """
+    def __init__(self, filename, id_col, text_col, label_col, lang):
         self.data = pd.read_csv(filename)
-        self.texts = [normalizeString(text) for text in self.data[text_col].values]
+        self.lang = lang
+        self.texts = [self.encode_sentence(normalizeString(text)) for text in self.data[text_col].values]
         self.labels = self.data[label_col].values
 
-    def __len__(self):
-        return len(self.texts)
+    def encode_sentence(self, sentence):
+        return [self.lang.word2index[word] for word in sentence.split(' ') if word in self.lang.word2index]
 
     def __getitem__(self, idx):
-        text_encoded = unicodeToAscii(self.texts[idx])
+        text_encoded = self.texts[idx]
         label = self.labels[idx]
         return torch.tensor(text_encoded, dtype=torch.long), torch.tensor(label, dtype=torch.float)
 
@@ -93,12 +88,19 @@ def collate(batch):
     """
     # YOUR CODE HERE
     texts, labels = zip(*batch)
-    texts_padded = pad_sequence(texts, batch_first=True, padding_value=0) 
+    texts_padded = pad_sequence(texts, batch_first=True, padding_value=0)
     labels = torch.tensor(labels, dtype=torch.float)
     return texts_padded, labels
 
-    
-#train_dataset = ToxicityDataset('data.csv', 'id', 'comment', 'toxic')
+lang = Lang("eng")
 
-#train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, collate_fn=collate)
+data = pd.read_csv('data.csv')
 
+df = pd.DataFrame(data)
+
+for sentence in df['text']:
+    lang.addSentence(normalizeString(sentence))   
+
+train_dataset = ToxicityDataset('data.csv', 'id', 'comment', 'toxic')
+
+train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, collate_fn=collate)
