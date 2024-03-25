@@ -3,12 +3,10 @@ import torch
 import re
 import unicodedata
 import pandas as pd
-from skimage import io, transform
 import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
-from encoder.py import Encoder
 from torch.nn.utils.rnn import pad_sequence
 
 
@@ -65,6 +63,9 @@ class ToxicityDataset(Dataset):
 
     def encode_sentence(self, sentence):
         return [self.lang.word2index[word] for word in sentence.split(' ') if word in self.lang.word2index]
+    
+    def __len__(self):
+        return len(self.texts)
 
     def __getitem__(self, idx):
         text_encoded = self.texts[idx]
@@ -92,6 +93,8 @@ def collate(batch):
     labels = torch.tensor(labels, dtype=torch.float)
     return texts_padded, labels
 
+
+'''
 lang = Lang("eng")
 
 data = pd.read_csv('data.csv')
@@ -101,6 +104,7 @@ df = pd.DataFrame(data)
 for sentence in df['text']:
     lang.addSentence(normalizeString(sentence))   
 
-train_dataset = ToxicityDataset('data.csv', 'id', 'comment', 'toxic')
+train_dataset = ToxicityDataset('data.csv', 'id', 'text', 'label', lang)
 
 train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, collate_fn=collate)
+'''
