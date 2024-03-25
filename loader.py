@@ -6,7 +6,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms, utils
 from torch.nn.utils.rnn import pad_sequence
 
 
@@ -128,14 +127,20 @@ def collate(batch):
 '''
 lang = Lang("eng")
 
-data = pd.read_csv('data.csv')
+data = pd.read_csv('data/train_2024.csv')
 
 df = pd.DataFrame(data)
 
 for sentence in df['text']:
     lang.addSentence(normalizeString(sentence))   
 
-train_dataset = ToxicityDataset('data.csv', 'id', 'text', 'label', lang)
+train_dataset = ToxicityDataset('data/train_2024.csv', 'id', 'text', 'label', lang)
 
-train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, collate_fn=collate)
+train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True, collate_fn=collate)
+
+for texts, src_mask, labels in train_loader:
+    print(texts)
+    print(src_mask)
+    print(labels)
+    break
 '''
