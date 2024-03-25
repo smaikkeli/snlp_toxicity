@@ -49,19 +49,21 @@ class Lang:
             else:
                 words.append(word)
         return ' '.join(words)
-def translateBatch(lang, inputs, labels=None):
+    
+def translateDatasetEntries(dataset, lang):
     translated_texts = []
-    translated_labels = []
+    labels = []
 
-    for seq in inputs:
-        seq_cleaned = seq[seq != 0]
-        translated_texts.append(lang.indicesToString(seq_cleaned))
+    for i in range(len(dataset)):
+        text_tensor, label_tensor = dataset[i] 
+        text_indices = text_tensor.numpy() 
 
-    if labels is not None:
-        for label in labels:
-            translated_labels.append(str(label.item()))
+        translated_text = lang.indicesToString(text_indices)
+        translated_texts.append(translated_text)
+        
+        labels.append(label_tensor.item())
 
-    return translated_texts, translated_labels
+    return translated_texts, labels
 
 
 def normalizeString(s):
