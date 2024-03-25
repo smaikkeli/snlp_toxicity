@@ -118,7 +118,7 @@ def collate(batch):
     texts, labels = zip(*batch_sorted)
     texts_padded = pad_sequence(texts, batch_first=False, padding_value=0)
     src_mask = (texts_padded == 0)
-
+    src_mask[0,:] = False
     return texts_padded, src_mask, labels
 
 
