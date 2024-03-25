@@ -13,7 +13,7 @@ from torch.nn.utils.rnn import pad_sequence
 import warnings
 warnings.filterwarnings("ignore")
 
-SOS_token = 0  # Start-of-sentence token
+CLS_token = 0  # Start-of-sentence token
 EOS_token = 1  # End-of-sentence token
 MAX_LENGTH = 10
 
@@ -23,7 +23,7 @@ class Lang:
         self.name = name
         self.word2index = {}
         self.word2count = {}
-        self.index2word = {0: "SOS", 1: "EOS"}
+        self.index2word = {0: "CLS", 1: "EOS"}
         self.n_words = 2
 
     def addSentence(self, sentence):
@@ -87,11 +87,15 @@ def collate(batch):
       src_seq_lengths: List of lengths of source sequences.
       tgt_seqs of shape (max_tgt_seq_length, batch_size): Tensor of padded target sequences.
     """
-    # YOUR CODE HERE
-    texts, labels = zip(*batch)
-    texts_padded = pad_sequence(texts, batch_first=True, padding_value=0)
-    labels = torch.tensor(labels, dtype=torch.float)
-    return texts_padded, labels
+    batch_sorted = sorted(batch, key= lambda x: len(x[0]), reverse = True)
+    texts, labels = zip(*batch_sorted)
+    texts_padded = pad_sequence(texts, batch_first=False, padding_value=0)
+    src_mask = (texts_padded == 0)
+
+    cls_tensor = torch.tensor([CLS_token])
+    labels = [torch.cat((cls_tensor, tg)) for tg in labels]
+    labels_padded = pad_sequence(labels, batch_first=False, padding_value=0)
+    return texts_padded, src_mask, labels_padded
 
 
 '''
