@@ -39,6 +39,31 @@ class Lang:
         else:
             self.word2count[word] += 1
 
+    def indicesToString(self, indices):
+        """Converts a list of indices back to a string. Special tokens are handled."""
+        words = []
+        for idx in indices:
+            word = self.index2word[idx.item()] if idx.item() in self.index2word else '[UNK]'
+            if word == "CLS":
+                words.append('[' + word + ']')
+            else:
+                words.append(word)
+        return ' '.join(words)
+def translateBatch(lang, inputs, labels=None):
+    translated_texts = []
+    translated_labels = []
+
+    for seq in inputs:
+        seq_cleaned = seq[seq != 0]
+        translated_texts.append(lang.indicesToString(seq_cleaned))
+
+    if labels is not None:
+        for label in labels:
+            translated_labels.append(str(label.item()))
+
+    return translated_texts, translated_labels
+
+
 def normalizeString(s):
     s = s.lower().strip()
     s = re.sub(r"([.!?])", r" \1", s)
@@ -92,10 +117,7 @@ def collate(batch):
     texts_padded = pad_sequence(texts, batch_first=False, padding_value=0)
     src_mask = (texts_padded == 0)
 
-    cls_tensor = torch.tensor([CLS_token])
-    labels = [torch.cat((cls_tensor, tg)) for tg in labels]
-    labels_padded = pad_sequence(labels, batch_first=False, padding_value=0)
-    return texts_padded, src_mask, labels_padded
+    return texts_padded, src_mask, labels
 
 
 '''
