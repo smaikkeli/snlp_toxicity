@@ -116,6 +116,9 @@ def collate(batch):
     """
     batch_sorted = sorted(batch, key= lambda x: len(x[0]), reverse = True)
     texts, labels = zip(*batch_sorted)
+
+    cls_tensor = torch.tensor([CLS_token])
+    texts = [torch.cat((cls_tensor, tg)) for tg in texts]
     texts_padded = pad_sequence(texts, batch_first=False, padding_value=0)
     src_mask = (texts_padded == 0)
     src_mask[0,:] = False
