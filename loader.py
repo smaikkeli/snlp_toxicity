@@ -118,9 +118,10 @@ def collate(batch):
 
     cls_tensor = torch.tensor([CLS_token])
     texts = [torch.cat((cls_tensor, tg)) for tg in texts]
-    texts_padded = pad_sequence(texts, batch_first=False, padding_value=0)
+    texts_padded = pad_sequence(texts, batch_first=True, padding_value=0)
     src_mask = (texts_padded == 0)
-    src_mask[0,:] = False
+    src_mask[:,0] = False
+
     return texts_padded, src_mask, labels
 
 
