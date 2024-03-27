@@ -22,7 +22,7 @@ class Lang:
         self.name = name
         self.word2index = {}
         self.word2count = {}
-        self.index2word = {0: "CLS", 1: "EOS"}
+        self.index2word = {0: "CLS", 1: "EOS"}  
         self.n_words = 2
 
     def addSentence(self, sentence):
@@ -96,6 +96,8 @@ class ToxicityDataset(Dataset):
     def __getitem__(self, idx):
         text_encoded = self.texts[idx]
         label = self.labels[idx]
+        #Add EOS token
+        text_encoded.append(EOS_token)
         return torch.tensor(text_encoded, dtype=torch.long), torch.tensor(label, dtype=torch.float)
 
 def collate(batch):
