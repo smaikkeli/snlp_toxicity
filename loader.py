@@ -124,6 +124,8 @@ def collate(batch):
     src_mask = (texts_padded == 0)
     src_mask[:,0] = False
 
+    labels = torch.tensor(labels, dtype=torch.float)
+
     return texts_padded, src_mask, labels
 
 
