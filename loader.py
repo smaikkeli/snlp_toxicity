@@ -49,6 +49,17 @@ class Lang:
                 words.append(word)
         return ' '.join(words)
     
+    def trim(self):
+        """Remove words below a certain frequency threshold"""
+        keep_words = [k for k, v in self.word2count.items() if v >= 5]
+        print(f'Keeping {len(keep_words)} words out of {len(self.word2count)}')
+        self.word2index = {}
+        self.word2count = {}
+        self.index2word = {0: "CLS", 1: "EOS"}  
+        self.n_words = 2
+        for word in keep_words:
+            self.addWord(word)
+    
 def translateDatasetEntries(dataset, lang):
     translated_texts = []
     labels = []
