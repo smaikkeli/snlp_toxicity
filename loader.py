@@ -49,16 +49,6 @@ class Lang:
                 words.append(word)
         return ' '.join(words)
     
-    def trim(self):
-        """Remove words below a certain frequency threshold"""
-        keep_words = [k for k, v in self.word2count.items() if v >= 5]
-        print(f'Keeping {len(keep_words)} words out of {len(self.word2count)}')
-        self.word2index = {}
-        self.word2count = {}
-        self.index2word = {0: "CLS", 1: "EOS"}  
-        self.n_words = 2
-        for word in keep_words:
-            self.addWord(word)
     
 def translateDatasetEntries(dataset, lang):
     translated_texts = []
@@ -93,9 +83,9 @@ class ToxicityDataset(Dataset):
     """Toxicity dataset."""
 
     def __init__(self, filename, id_col, text_col, label_col, lang):
-        self.data = pd.read_csv(filename)
+        self.data = pd.read_csv(filename, quoting=3)
         self.lang = lang
-        self.texts = [self.encode_sentence(normalizeString(text)) for text in self.data[text_col].values]
+        self.texts = [self.encode_sentence((text)) for text in self.data[text_col].values]
         self.labels = self.data[label_col].values
 
     def encode_sentence(self, sentence):
@@ -109,7 +99,7 @@ class ToxicityDataset(Dataset):
         label = self.labels[idx]
         #Add EOS token
         text_encoded.append(EOS_token)
-        return torch.tensor(text_encoded, dtype=torch.long), torch.tensor(label, dtype=torch.float)
+        return torch.tensor(text_encoded, dtype=torch.long), torch.tensor(label, dtype=torch.float32)
 
 def collate(batch):
     """Merges a list of samples to form a mini-batch.
@@ -135,7 +125,7 @@ def collate(batch):
     src_mask = (texts_padded == 0)
     src_mask[:,0] = False
 
-    labels = torch.tensor(labels, dtype=torch.float)
+    labels = torch.tensor(labels, dtype=torch.float32)
 
     return texts_padded, src_mask, labels
 
@@ -143,7 +133,7 @@ def collate(batch):
 '''
 lang = Lang("eng")
 
-data = pd.read_csv('data/train_2024.csv')
+data = pd.read_csv('data/train_2024.csv', quoting = 3)
 
 df = pd.DataFrame(data)
 
