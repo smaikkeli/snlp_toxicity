@@ -84,6 +84,8 @@ class ToxicityDataset(Dataset):
 
     def __init__(self, filename, id_col, text_col, label_col, lang):
         self.data = pd.read_csv(filename, quoting=3)
+        #If label only contains ?, then set it to -1
+        self.data[label_col] = self.data[label_col].apply(lambda x: -1 if x == '?' else x)
         self.lang = lang
         self.texts = [self.encode_sentence((text)) for text in self.data[text_col].values]
         self.labels = self.data[label_col].values
