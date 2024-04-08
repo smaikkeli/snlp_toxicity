@@ -116,9 +116,6 @@ test_data = pd.read_csv('./data/test_2024.csv', quoting = 3)
 test_data['label'] = -1
 
 test_df = pd.DataFrame(test_data)
-for sentence in test_df['text']:
-    lang.addSentence(normalizeString(sentence))
-
 testset = ToxicityDataset('./test_data.csv', 'id', 'text', 'label', lang)
 test_loader = DataLoader(testset, batch_size=1, shuffle=False, collate_fn=collate)
 
