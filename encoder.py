@@ -104,9 +104,9 @@ class EncoderClassifier(nn.Module):
         x = self.encoder(x, mask)
         
         #Take the [CLS] token
-        #x = x[:,   0, :]
+        x = x[:,   0, :]
 
-        x = x.mean(dim = 1)
+        #x = x.mean(dim = 1)
         
         x = self.classifier(x)
         return x

@@ -91,24 +91,24 @@ print("Trainset loaded \n")
 
 from encoder import Encoder, MLPClassifier, EncoderClassifier
 
-embed_size = 512
+embed_size = 256
 
 #This correponds to the first model I tried
-bert_encoder = Encoder(src_vocab_size=trainset.lang.n_words, n_blocks = 4, n_features = embed_size, n_heads = 4, n_hidden = 512, dropout = 0.1, max_length = 5000)
-classifier = MLPClassifier(n_features = embed_size, num_classes = 2, num_layers = 2, dropout = 0.1)
+bert_encoder = Encoder(src_vocab_size=trainset.lang.n_words, n_blocks = 2, n_features = embed_size, n_heads = 3, n_hidden = 512, dropout = 0.1, max_length = 5000)
+classifier = MLPClassifier(n_features = embed_size, num_classes = 2, num_layers = 2, dropout = 0.3)
 encoder_classifier = EncoderClassifier(bert_encoder, classifier)
 
 print("Model loaded \n")
 
 model = encoder_classifier
 model = model.to(device)
-optimizer = optim.Adam(model.parameters(), lr=0.0001, betas = (0.9, 0.98), eps=1e-9)
+optimizer = optim.Adam(model.parameters(), lr=0.00001, betas = (0.9, 0.98), eps=1e-9)
 criterion = nn.BCEWithLogitsLoss()
 
 print(f'Entering the training loop \n')
 
 if not skip_training:
-    epochs = 15
+    epochs = 25
     for epoch in range(epochs):
         total_loss = 0.0
         correct = 0
@@ -162,8 +162,8 @@ print(f'Model saved \n')
 
 #If model is not defined, load it from encoder.pth
 #This correponds to the first model I tried
-bert_encoder = Encoder(src_vocab_size=trainset.lang.n_words, n_blocks = 4, n_features = embed_size, n_heads = 4, n_hidden = 512, dropout = 0.1, max_length = 5000)
-classifier = MLPClassifier(n_features = embed_size, num_classes = 2, num_layers = 2, dropout = 0.1)
+bert_encoder = Encoder(src_vocab_size=trainset.lang.n_words, n_blocks = 2, n_features = embed_size, n_heads = 3, n_hidden = 512, dropout = 0.1, max_length = 5000)
+classifier = MLPClassifier(n_features = embed_size, num_classes = 2, num_layers = 2, dropout = 0.3)
 encoder_classifier = EncoderClassifier(bert_encoder, classifier)
 model = encoder_classifier
 model.load_state_dict(torch.load('encoder.pth'))
