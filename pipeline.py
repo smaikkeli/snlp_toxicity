@@ -83,7 +83,7 @@ criterion = nn.BCEWithLogitsLoss()
 print(f'Entering the training loop \n')
 
 if not skip_training:
-    epochs = 10
+    epochs = 20
     for epoch in range(epochs):
         total_loss = 0.0
         correct = 0
