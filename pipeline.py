@@ -38,7 +38,7 @@ def compute_accuracy(model, val_loader):
 
 print(f'Loading data... \n')
 
-skip_training = True
+skip_training = False
 
 lang = Lang("eng")
 data = pd.read_csv('data/train_2024.csv', quoting = 3)
