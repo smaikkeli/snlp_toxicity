@@ -72,7 +72,7 @@ for sentence in df['text']:
     lang.addSentence(normalizeString(sentence))   
 
 trainset = ToxicityDataset('data/train_2024.csv', 'id', 'text', 'label', lang)
-train_loader = DataLoader(trainset, batch_size=32, shuffle=True, collate_fn=collate)
+train_loader = DataLoader(trainset, batch_size=64, shuffle=True, collate_fn=collate)
 
 
 val_data = pd.read_csv('data/dev_2024.csv', quoting = 3)
