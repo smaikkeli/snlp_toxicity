@@ -69,7 +69,7 @@ class MLPClassifier(nn.Module):
         
         #A single layer
         layers = [
-            nn.Linear(n_features, n_features * 8),
+            nn.Linear(n_features, n_features*4),
             nn.ReLU(),
             nn.Dropout(dropout)
         ]
