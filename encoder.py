@@ -77,16 +77,16 @@ class MLPClassifier(nn.Module):
         #Append all layers
         for _ in range(num_layers - 1):
             layers.extend([
-                nn.Linear(n_features * 8, n_features * 8),
+                nn.Linear(n_features*4, n_features*4),
                 nn.ReLU(),
                 nn.Dropout(dropout)
             ])
 
         #The output layer
         if num_classes == 2:
-            layers.append(nn.Linear(n_features * 8, 1))
+            layers.append(nn.Linear(n_features*4, 1))
         else:
-            layers.append(nn.Linear(n_features * 8, num_classes))
+            layers.append(nn.Linear(n_features*4, num_classes))
         
         self.classifier = nn.Sequential(*layers)
 
