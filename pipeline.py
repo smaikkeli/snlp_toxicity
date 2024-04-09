@@ -18,6 +18,31 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 from loader import Lang, ToxicityDataset, normalizeString, collate
 
+def compute_f1(model, val_loader):
+    model.eval()
+    f1 = []
+    for i, data in enumerate(val_loader):
+        inputs, mask, labels = data
+        inputs = inputs.to(device)
+        mask = mask.to(device)
+        labels = labels.to(torch.float32).reshape(labels.size(0), 1).to(device)
+
+        outputs = model(inputs, mask)
+
+        out = torch.round(torch.sigmoid(outputs))
+        tp = torch.sum(out * labels).item()
+        fp = torch.sum(out * (1 - labels)).item()
+        fn = torch.sum((1 - out) * labels).item()
+        if tp == 0:
+            f1.append(0)
+        else:
+            precision = tp / (tp + fp)
+            recall = tp / (tp + fn)
+            f1.append(2 * precision * recall / (precision + recall))
+
+    f1 = np.mean(f1)
+    return f1
+
 
 def compute_accuracy(model, val_loader):
     model.eval()
@@ -69,7 +94,7 @@ from encoder import Encoder, MLPClassifier, EncoderClassifier
 embed_size = 512
 
 #This correponds to the first model I tried
-bert_encoder = Encoder(src_vocab_size=trainset.lang.n_words, n_blocks = 6, n_features = embed_size, n_heads = 8, n_hidden = 512, dropout = 0.1, max_length = 5000)
+bert_encoder = Encoder(src_vocab_size=trainset.lang.n_words, n_blocks = 4, n_features = embed_size, n_heads = 4, n_hidden = 512, dropout = 0.1, max_length = 5000)
 classifier = MLPClassifier(n_features = embed_size, num_classes = 2, num_layers = 2, dropout = 0.1)
 encoder_classifier = EncoderClassifier(bert_encoder, classifier)
 
@@ -127,6 +152,7 @@ print(f"Epoch {epoch + 1}, Loss: {epoch_loss:.4f}, Accuracy: {epoch_accuracy:.2f
 #Compute validation accuracy
 val_accuracy = compute_accuracy(model, val_loader)
 print(f"Validation accuracy: {val_accuracy:.2f}%")
+print(f"Validation F1: {compute_f1(model, val_loader):.2f}%")
 
 # Save the model
 
@@ -135,9 +161,11 @@ torch.save(model.state_dict(), 'encoder.pth')
 print(f'Model saved \n')
 
 #If model is not defined, load it from encoder.pth
-bert_encoder = Encoder(src_vocab_size=trainset.lang.n_words, n_blocks = 3, n_features = embed_size, n_heads = 4, n_hidden = 512, dropout = 0.1, max_length = 5000)
+#This correponds to the first model I tried
+bert_encoder = Encoder(src_vocab_size=trainset.lang.n_words, n_blocks = 4, n_features = embed_size, n_heads = 4, n_hidden = 512, dropout = 0.1, max_length = 5000)
 classifier = MLPClassifier(n_features = embed_size, num_classes = 2, num_layers = 2, dropout = 0.1)
-model = EncoderClassifier(bert_encoder, classifier)
+encoder_classifier = EncoderClassifier(bert_encoder, classifier)
+model = encoder_classifier
 model.load_state_dict(torch.load('encoder.pth'))
 
 print("Model loaded correctly \n")
