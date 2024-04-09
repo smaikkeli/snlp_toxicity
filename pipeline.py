@@ -18,7 +18,27 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 from loader import Lang, ToxicityDataset, normalizeString, collate
 
+
+def compute_accuracy(model, val_loader):
+    model.eval()
+    accuracy = []
+    for i, data in enumerate(val_loader):
+        inputs, mask, labels = data
+        inputs = inputs.to(device)
+        mask = mask.to(device)
+        labels = labels.to(torch.float32).reshape(labels.size(0), 1).to(device)
+
+        outputs = model(inputs, mask)
+
+        out = torch.round(torch.sigmoid(outputs))
+        accuracy.append(torch.sum(out == labels).item() / labels.size(0))
+
+    accuracy = np.mean(accuracy)
+    return accuracy
+
 print(f'Loading data... \n')
+
+skip_training = True
 
 lang = Lang("eng")
 data = pd.read_csv('data/train_2024.csv', quoting = 3)
@@ -29,9 +49,18 @@ for sentence in df['text']:
 trainset = ToxicityDataset('data/train_2024.csv', 'id', 'text', 'label', lang)
 train_loader = DataLoader(trainset, batch_size=32, shuffle=True, collate_fn=collate)
 
+
+val_data = pd.read_csv('data/dev_2024.csv', quoting = 3)
+val_df = pd.DataFrame(val_data)
+
+valset = ToxicityDataset('data/dev_2024.csv', 'id', 'text', 'label', lang)
+val_loader = DataLoader(valset, batch_size=64, shuffle=False, collate_fn=collate)
+
 #Test if trainset contains correct number of rows
 if len(trainset) == 99000:
     print("Trainset loaded correctly")
+else:
+    exit()
 
 print("Trainset loaded \n")
 
@@ -53,46 +82,51 @@ criterion = nn.BCEWithLogitsLoss()
 
 print(f'Entering the training loop \n')
 
-epochs = 10
-for epoch in range(epochs):
-    total_loss = 0.0
-    correct = 0
-    total = 0
-    
-    # Set the model to training mode
-    model.train()
-    
-    for i, data in enumerate(train_loader):
-        inputs, mask, labels = data
-    
-        inputs = inputs.to(device)
-        mask = mask.to(torch.float32).to(device)
-        labels = labels.to(torch.float32).reshape(labels.size(0), 1).to(device)
+if not skip_training:
+    epochs = 10
+    for epoch in range(epochs):
+        total_loss = 0.0
+        correct = 0
+        total = 0
         
-        optimizer.zero_grad()
-
-        outputs = model(inputs, mask)
-        loss = criterion(outputs, labels)
+        # Set the model to training mode
+        model.train()
         
-        loss.backward()
-        optimizer.step()
+        for i, data in enumerate(train_loader):
+            inputs, mask, labels = data
+        
+            inputs = inputs.to(device)
+            mask = mask.to(torch.float32).to(device)
+            labels = labels.to(torch.float32).reshape(labels.size(0), 1).to(device)
+            
+            optimizer.zero_grad()
 
-        # Compute total loss
-        total_loss += loss.item()
+            outputs = model(inputs, mask)
+            loss = criterion(outputs, labels)
+            
+            loss.backward()
+            optimizer.step()
 
-        # Calculate accuracy
-        predicted = torch.round(torch.sigmoid(outputs))
-        correct += (predicted == labels).sum().item()
-        total += labels.size(0)
+            # Compute total loss
+            total_loss += loss.item()
 
-        # Print batch loss
-        print(f"Epoch {epoch + 1}, Batch {i + 1}, Loss: {loss.item():.4f}")
+            # Calculate accuracy
+            predicted = torch.round(torch.sigmoid(outputs))
+            correct += (predicted == labels).sum().item()
+            total += labels.size(0)
 
-# Calculate epoch-level statistics
-epoch_loss = total_loss / len(train_loader)
-epoch_accuracy = correct / total * 100.0
+            # Print batch loss
+            print(f"Epoch {epoch + 1}, Batch {i + 1}, Loss: {loss.item():.4f}")
+
+    # Calculate epoch-level statistics
+    epoch_loss = total_loss / len(train_loader)
+    epoch_accuracy = correct / total * 100.0
 
 print(f"Epoch {epoch + 1}, Loss: {epoch_loss:.4f}, Accuracy: {epoch_accuracy:.2f}%")
+
+#Compute validation accuracy
+val_accuracy = compute_accuracy(model, val_loader)
+print(f"Validation accuracy: {val_accuracy:.2f}%")
 
 # Save the model
 
@@ -115,7 +149,7 @@ test_data = pd.read_csv('./data/test_2024.csv', quoting = 3)
 test_data['label'] = -1
 
 test_df = pd.DataFrame(test_data)
-testset = ToxicityDataset('./test_data.csv', 'id', 'text', 'label', lang)
+testset = ToxicityDataset('./data/test_2024.csv', 'id', 'text', 'label', lang)
 test_loader = DataLoader(testset, batch_size=1, shuffle=False, collate_fn=collate)
 
 #Test if testset contains correct number of rows)
