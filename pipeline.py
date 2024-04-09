@@ -66,10 +66,10 @@ print("Trainset loaded \n")
 
 from encoder import Encoder, MLPClassifier, EncoderClassifier
 
-embed_size = 256
+embed_size = 512
 
 #This correponds to the first model I tried
-bert_encoder = Encoder(src_vocab_size=trainset.lang.n_words, n_blocks = 3, n_features = embed_size, n_heads = 4, n_hidden = 512, dropout = 0.1, max_length = 5000)
+bert_encoder = Encoder(src_vocab_size=trainset.lang.n_words, n_blocks = 6, n_features = embed_size, n_heads = 8, n_hidden = 512, dropout = 0.1, max_length = 5000)
 classifier = MLPClassifier(n_features = embed_size, num_classes = 2, num_layers = 2, dropout = 0.1)
 encoder_classifier = EncoderClassifier(bert_encoder, classifier)
 

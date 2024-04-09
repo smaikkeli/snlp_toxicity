@@ -100,8 +100,8 @@ class ToxicityDataset(Dataset):
         text_encoded = self.texts[idx]
         label = self.labels[idx]
         #Add EOS token
-        text_encoded.append(EOS_token)
-        return torch.tensor(text_encoded, dtype=torch.long), torch.tensor(label, dtype=torch.float32)
+        text_encoded_with_eos = text_encoded + [EOS_token]
+        return torch.tensor(text_encoded_with_eos, dtype=torch.long), torch.tensor(label, dtype=torch.float32)
 
 def collate(batch):
     """Merges a list of samples to form a mini-batch.
