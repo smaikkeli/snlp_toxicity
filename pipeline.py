@@ -48,7 +48,7 @@ print("Model loaded \n")
 
 model = encoder_classifier
 model = model.to(device)
-optimizer = optim.Adam(model.parameters(), lr=0.001, betas = (0.9, 0.98), eps=1e-9)
+optimizer = optim.Adam(model.parameters(), lr=0.0001, betas = (0.9, 0.98), eps=1e-9)
 criterion = nn.BCEWithLogitsLoss()
 
 print(f'Entering the training loop \n')
@@ -57,20 +57,20 @@ epochs = 10
 for epoch in range(epochs):
     total_loss = 0.0
     correct = 0
-    total_accuracy = 0.0
+    total = 0
     
     # Set the model to training mode
     model.train()
     
     for i, data in enumerate(train_loader):
-        optimizer.zero_grad()
-
         inputs, mask, labels = data
     
         inputs = inputs.to(device)
-        mask = mask.to(device)
+        mask = mask.to(torch.float32).to(device)
         labels = labels.to(torch.float32).reshape(labels.size(0), 1).to(device)
         
+        optimizer.zero_grad()
+
         outputs = model(inputs, mask)
         loss = criterion(outputs, labels)
         
@@ -82,18 +82,17 @@ for epoch in range(epochs):
 
         # Calculate accuracy
         predicted = torch.round(torch.sigmoid(outputs))
-        correct = (predicted == labels).sum().item()
-        total = labels.size(0)
+        correct += (predicted == labels).sum().item()
+        total += labels.size(0)
 
         # Print batch loss
-        #if i % 100 == 0:
         print(f"Epoch {epoch + 1}, Batch {i + 1}, Loss: {loss.item():.4f}")
 
-        total_loss += total_loss / len(train_loader)
-        total_accuracy += correct / total * 100.0
+# Calculate epoch-level statistics
+epoch_loss = total_loss / len(train_loader)
+epoch_accuracy = correct / total * 100.0
 
-    
-    print(f"Epoch {epoch + 1}, Loss: {total_loss:.4f}, Accuracy: {total_accuracy:.2f}%")
+print(f"Epoch {epoch + 1}, Loss: {epoch_loss:.4f}, Accuracy: {epoch_accuracy:.2f}%")
 
 # Save the model
 
