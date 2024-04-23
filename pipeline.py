@@ -16,7 +16,7 @@ seaborn.set_context(context="talk")
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-from loader import Lang, ToxicityDataset, normalizeString, collate
+from loader import Lang, ToxicityDataset, normalizeString, collate, unicodeToAscii
 
 def compute_f1(model, val_loader):
     model.eval()
@@ -43,7 +43,7 @@ def compute_f1(model, val_loader):
     f1 = np.mean(f1)
     return f1
 
-
+ 
 def compute_accuracy(model, val_loader):
     model.eval()
     accuracy = []
@@ -69,11 +69,13 @@ lang = Lang("eng")
 data = pd.read_csv('data/train_2024.csv', quoting = 3)
 df = pd.DataFrame(data)
 for sentence in df['text']:
-    lang.addSentence(normalizeString(sentence))   
+    lang.addSentence(normalizeString(unicodeToAscii(sentence)))  
+
+#Remove words that occcur less than n times
+lang.trim(10) 
 
 trainset = ToxicityDataset('data/train_2024.csv', 'id', 'text', 'label', lang)
 train_loader = DataLoader(trainset, batch_size=64, shuffle=True, collate_fn=collate)
-
 
 val_data = pd.read_csv('data/dev_2024.csv', quoting = 3)
 val_df = pd.DataFrame(val_data)
@@ -81,6 +83,7 @@ val_df = pd.DataFrame(val_data)
 valset = ToxicityDataset('data/dev_2024.csv', 'id', 'text', 'label', lang)
 val_loader = DataLoader(valset, batch_size=64, shuffle=False, collate_fn=collate)
 
+print(f'Vocabulary size: {lang.n_words}')
 #Test if trainset contains correct number of rows
 if len(trainset) == 99000:
     print("Trainset loaded correctly")
@@ -94,7 +97,7 @@ from encoder import Encoder, MLPClassifier, EncoderClassifier
 embed_size = 256
 
 #This correponds to the first model I tried
-bert_encoder = Encoder(src_vocab_size=trainset.lang.n_words, n_blocks = 2, n_features = embed_size, n_heads = 3, n_hidden = 512, dropout = 0.1, max_length = 5000)
+bert_encoder = Encoder(src_vocab_size=trainset.lang.n_words, n_blocks = 2, n_features = embed_size, n_heads = 4, n_hidden = 512, dropout = 0.1, max_length = 5000)
 classifier = MLPClassifier(n_features = embed_size, num_classes = 2, num_layers = 2, dropout = 0.3)
 encoder_classifier = EncoderClassifier(bert_encoder, classifier)
 
@@ -102,7 +105,7 @@ print("Model loaded \n")
 
 model = encoder_classifier
 model = model.to(device)
-optimizer = optim.Adam(model.parameters(), lr=0.00001, betas = (0.9, 0.98), eps=1e-9)
+optimizer = optim.Adam(model.parameters(), lr=0.0001, betas = (0.9, 0.98), eps=1e-9)
 criterion = nn.BCEWithLogitsLoss()
 
 print(f'Entering the training loop \n')
@@ -119,6 +122,9 @@ if not skip_training:
         
         for i, data in enumerate(train_loader):
             inputs, mask, labels = data
+
+            translated = [trainset.lang.index2word[i.item()] for input in inputs for i in input]
+            print(translated)
         
             inputs = inputs.to(device)
             mask = mask.to(torch.float32).to(device)
