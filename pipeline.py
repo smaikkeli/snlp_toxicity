@@ -122,10 +122,7 @@ if not skip_training:
         
         for i, data in enumerate(train_loader):
             inputs, mask, labels = data
-
-            translated = [trainset.lang.index2word[i.item()] for input in inputs for i in input]
-            print(translated)
-        
+              
             inputs = inputs.to(device)
             mask = mask.to(torch.float32).to(device)
             labels = labels.to(torch.float32).reshape(labels.size(0), 1).to(device)
