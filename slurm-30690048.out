@@ -1,0 +1,22 @@
+Loading data... 
+
+Trainset loaded correctly
+Trainset loaded 
+
+Traceback (most recent call last):
+  File "/scratch/work/ashrafs2/snlp-gpu/snlp_new/snlp_toxicity/pipeline.py", line 97, in <module>
+    bert_encoder = Encoder(src_vocab_size=trainset.lang.n_words, n_blocks = 2, n_features = embed_size, n_heads = 3, n_hidden = 512, dropout = 0.1, max_length = 5000)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/work/ashrafs2/snlp-gpu/snlp_new/snlp_toxicity/encoder.py", line 53, in __init__
+    self.blocks = nn.ModuleList([EncoderBlock(n_features, n_heads, n_hidden, dropout) for _ in range(n_blocks)])
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/work/ashrafs2/snlp-gpu/snlp_new/snlp_toxicity/encoder.py", line 53, in <listcomp>
+    self.blocks = nn.ModuleList([EncoderBlock(n_features, n_heads, n_hidden, dropout) for _ in range(n_blocks)])
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/work/ashrafs2/snlp-gpu/snlp_new/snlp_toxicity/encoder.py", line 22, in __init__
+    self.attn = nn.MultiheadAttention(n_features, n_heads, batch_first = True)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/work/ashrafs2/.conda_envs/snlp/lib/python3.11/site-packages/torch/nn/modules/activation.py", line 960, in __init__
+    assert self.head_dim * num_heads == self.embed_dim, "embed_dim must be divisible by num_heads"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: embed_dim must be divisible by num_heads

@@ -1,0 +1,14 @@
+Loading data... 
+
+Trainset loaded correctly
+Trainset loaded 
+
+Model loaded 
+
+Entering the training loop 
+
+Traceback (most recent call last):
+  File "/scratch/work/ashrafs2/snlp-gpu/snlp_new/snlp_toxicity/pipeline.py", line 125, in <module>
+    print(f"Epoch {epoch + 1}, Loss: {epoch_loss:.4f}, Accuracy: {epoch_accuracy:.2f}%")
+                   ^^^^^
+NameError: name 'epoch' is not defined

@@ -1,0 +1,3 @@
+slurmstepd: error: *** JOB 30689681 ON dgx5 CANCELLED AT 2024-04-09T18:50:03 ***
+Job has already finished for job 30689681
+slurmstepd: error: --task-epilog failed status=256

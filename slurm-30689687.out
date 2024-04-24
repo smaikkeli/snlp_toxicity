@@ -1,0 +1,38 @@
+Loading data... 
+
+Trainset loaded correctly
+Trainset loaded 
+
+Model loaded 
+
+Entering the training loop 
+
+Traceback (most recent call last):
+  File "/scratch/work/ashrafs2/snlp-gpu/snlp_new/snlp_toxicity/pipeline.py", line 129, in <module>
+    outputs = model(inputs, mask)
+              ^^^^^^^^^^^^^^^^^^^
+  File "/scratch/work/ashrafs2/.conda_envs/snlp/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1194, in _call_impl
+    return forward_call(*input, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/work/ashrafs2/snlp-gpu/snlp_new/snlp_toxicity/encoder.py", line 111, in forward
+    x = self.classifier(x)
+        ^^^^^^^^^^^^^^^^^^
+  File "/scratch/work/ashrafs2/.conda_envs/snlp/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1194, in _call_impl
+    return forward_call(*input, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/work/ashrafs2/snlp-gpu/snlp_new/snlp_toxicity/encoder.py", line 94, in forward
+    return self.classifier(x)
+           ^^^^^^^^^^^^^^^^^^
+  File "/scratch/work/ashrafs2/.conda_envs/snlp/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1194, in _call_impl
+    return forward_call(*input, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/work/ashrafs2/.conda_envs/snlp/lib/python3.11/site-packages/torch/nn/modules/container.py", line 204, in forward
+    input = module(input)
+            ^^^^^^^^^^^^^
+  File "/scratch/work/ashrafs2/.conda_envs/snlp/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1194, in _call_impl
+    return forward_call(*input, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/work/ashrafs2/.conda_envs/snlp/lib/python3.11/site-packages/torch/nn/modules/linear.py", line 114, in forward
+    return F.linear(input, self.weight, self.bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: mat1 and mat2 shapes cannot be multiplied (32x4096 and 2048x2048)
