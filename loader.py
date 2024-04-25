@@ -16,6 +16,11 @@ CLS_token = 0  # Start-of-sentence token
 EOS_token = 1  # End-of-sentence token
 MAX_LENGTH = 10
 
+class BPE:
+    def __init__(self, name):
+        self.name = name
+        self.vocab = {}
+
 class Lang:
     """A class that encodes words with one-hot vectors."""
     def __init__(self, name):
@@ -48,6 +53,21 @@ class Lang:
             else:
                 words.append(word)
         return ' '.join(words)
+    
+    def trim(self, min_count):
+        keep_words = []
+        for k, v in self.word2count.items():
+            if v >= min_count:
+                keep_words.append(k)
+
+        # Reinitialize dictionaries
+        self.word2index = {}
+        self.word2count = {}
+        self.index2word = {0: "CLS", 1: "EOS"}  
+        self.n_words = 2
+
+        for word in keep_words:
+            self.addWord(word)
     
     
 def translateDatasetEntries(dataset, lang):
@@ -86,6 +106,9 @@ class ToxicityDataset(Dataset):
         self.data = pd.read_csv(filename, quoting=3)
         #If label only contains ?, then set it to -1
         self.data[label_col] = self.data[label_col].apply(lambda x: -1 if x == '?' else x)
+        self.data[text_col] = self.data[text_col].apply(lambda x: unicodeToAscii(x))
+        self.data[text_col] = self.data[text_col].apply(lambda x: normalizeString(x))
+
         self.lang = lang
         self.texts = [self.encode_sentence((text)) for text in self.data[text_col].values]
         self.labels = self.data[label_col].values
@@ -130,25 +153,3 @@ def collate(batch):
     labels = torch.tensor(labels, dtype=torch.float32)
 
     return texts_padded, src_mask, labels
-
-
-'''
-lang = Lang("eng")
-
-data = pd.read_csv('data/train_2024.csv', quoting = 3)
-
-df = pd.DataFrame(data)
-
-for sentence in df['text']:
-    lang.addSentence(normalizeString(sentence))   
-
-train_dataset = ToxicityDataset('data/train_2024.csv', 'id', 'text', 'label', lang)
-
-train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True, collate_fn=collate)
-
-for texts, src_mask, labels in train_loader:
-    print(texts)
-    print(src_mask)
-    print(labels)
-    break
-'''
