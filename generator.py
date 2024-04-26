@@ -4,9 +4,26 @@ import re
 from transformers import GPT2Tokenizer, GPT2LMHeadModel, DataCollatorForLanguageModeling, Trainer, TrainingArguments, get_cosine_schedule_with_warmup
 import torch
 from torch.utils.data import Dataset
-'''
-train = pd.read_csv('/content/drive/MyDrive/SNLP/train_2024.csv')
-dev = pd.read_csv('/content/drive/MyDrive/SNLP/dev_2024.csv')
+
+
+def normalizeString(s):
+    s = s.lower().strip()
+    s = re.sub(r"([.!?])", r" \1", s)
+    s = re.sub(r"[^a-zA-Z.!?]+", r" ", s)
+    return s
+
+def unicodeToAscii(s):
+    return ''.join(
+        c for c in unicodedata.normalize('NFD', s)
+        if unicodedata.category(c) != 'Mn'
+    )
+
+def add_labels(row):
+        return f"<|startoftext|><|{row['label']}|> {row['text']} <|endoftext|>"
+
+
+train = pd.read_csv('./data/train_2024.csv')
+dev = pd.read_csv('./data/dev_2024.csv')
 
 train['text'] = train['text'].apply(normalizeString)
 train['text'] = train['text'].apply(unicodeToAscii)
@@ -17,10 +34,10 @@ dev['text'] = dev['text'].apply(unicodeToAscii)
 train['text'] = train.apply(add_labels, axis=1)
 dev['text'] = dev.apply(add_labels, axis=1)
 
-train['text'].to_csv('/content/drive/MyDrive/SNLP/train_dataset.txt', index=False, header=False)
-dev['text'].to_csv('/content/drive/MyDrive/SNLP/dev_dataset.txt', index=False, header=False)
+train['text'].to_csv('./data/train_dataset.txt', index=False, header=False)
+dev['text'].to_csv('./data/dev_dataset.txt', index=False, header=False)
 
-'''
+
 
 class CustomTextDataset(Dataset):
   def __init__(self, tokenizer, filename, block_size):
@@ -42,21 +59,6 @@ class CustomTextDataset(Dataset):
   def __getitem__(self, i):
       return self.examples[i]
   
-def normalizeString(s):
-    s = s.lower().strip()
-    s = re.sub(r"([.!?])", r" \1", s)
-    s = re.sub(r"[^a-zA-Z.!?]+", r" ", s)
-    return s
-
-def unicodeToAscii(s):
-    return ''.join(
-        c for c in unicodedata.normalize('NFD', s)
-        if unicodedata.category(c) != 'Mn'
-    )
-
-def add_labels(row):
-        return f"<|startoftext|><|{row['label']}|> {row['text']} <|endoftext|>"
-
 def preprocess_and_save(input_file, output_file):
     with open(input_file, 'r', encoding='utf-8') as f:
         text = f.read()
@@ -67,7 +69,10 @@ def preprocess_and_save(input_file, output_file):
         for sentence in sentences:
             f.write(sentence + '\n')
 
-def fine_tune(model_name='gpt2', output_dir='./model_save', num_train_epochs=4, batch_size=2):
+preprocess_and_save('./data/train_dataset.txt', './data/preprocessed_text.txt')
+preprocess_and_save('./data/dev_dataset.txt', './data/preprocessed_eval.txt')
+
+def fine_tune(model_name='gpt2', output_dir='./model_save', num_train_epochs=4, batch_size=8):
     
     tokenizer = GPT2Tokenizer.from_pretrained(model_name)
     model = GPT2LMHeadModel.from_pretrained(model_name)
@@ -77,8 +82,8 @@ def fine_tune(model_name='gpt2', output_dir='./model_save', num_train_epochs=4, 
 
     model.resize_token_embeddings(len(tokenizer))
 
-    train_dataset = CustomTextDataset(tokenizer=tokenizer, filename='preprocessed_text.txt', block_size=128)
-    dev_dataset = CustomTextDataset(tokenizer=tokenizer, filename='preprocessed_eval.txt', block_size=128)
+    train_dataset = CustomTextDataset(tokenizer=tokenizer, filename='./data/preprocessed_text.txt', block_size=128)
+    dev_dataset = CustomTextDataset(tokenizer=tokenizer, filename='./data/preprocessed_eval.txt', block_size=128)
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False, pad_to_multiple_of=8)
 
 
