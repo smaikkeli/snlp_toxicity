@@ -1,9 +1,47 @@
 import pandas as pd
 import unicodedata
 import re
-from transformers import GPT2Tokenizer, GPT2LMHeadModel, TextDataset, DataCollatorForLanguageModeling, Trainer, TrainingArguments, get_cosine_schedule_with_warmup
+from transformers import GPT2Tokenizer, GPT2LMHeadModel, DataCollatorForLanguageModeling, Trainer, TrainingArguments, get_cosine_schedule_with_warmup
+import torch
+from torch.utils.data import Dataset
+'''
+train = pd.read_csv('/content/drive/MyDrive/SNLP/train_2024.csv')
+dev = pd.read_csv('/content/drive/MyDrive/SNLP/dev_2024.csv')
+
+train['text'] = train['text'].apply(normalizeString)
+train['text'] = train['text'].apply(unicodeToAscii)
+
+dev['text'] = dev['text'].apply(normalizeString)
+dev['text'] = dev['text'].apply(unicodeToAscii)
+
+train['text'] = train.apply(add_labels, axis=1)
+dev['text'] = dev.apply(add_labels, axis=1)
+
+train['text'].to_csv('/content/drive/MyDrive/SNLP/train_dataset.txt', index=False, header=False)
+dev['text'].to_csv('/content/drive/MyDrive/SNLP/dev_dataset.txt', index=False, header=False)
+
+'''
+
+class CustomTextDataset(Dataset):
+  def __init__(self, tokenizer, filename, block_size):
+      self.examples = []
+      with open(filename, encoding='utf-8') as f:
+          for line in f:
+              line = line.strip()
+              if not line:
+                  continue
+              tokens = tokenizer.encode(line, add_special_tokens=True)
+              if len(tokens) > block_size:
+                  continue
+              self.examples.append(torch.tensor(tokens, dtype=torch.long))
 
 
+  def __len__(self):
+      return len(self.examples)
+
+  def __getitem__(self, i):
+      return self.examples[i]
+  
 def normalizeString(s):
     s = s.lower().strip()
     s = re.sub(r"([.!?])", r" \1", s)
@@ -19,28 +57,29 @@ def unicodeToAscii(s):
 def add_labels(row):
         return f"<|startoftext|><|{row['label']}|> {row['text']} <|endoftext|>"
 
+def preprocess_and_save(input_file, output_file):
+    with open(input_file, 'r', encoding='utf-8') as f:
+        text = f.read()
+
+    sentences = re.split(r'\n', text)
+
+    with open(output_file, 'w', encoding='utf-8') as f:
+        for sentence in sentences:
+            f.write(sentence + '\n')
+
 def fine_tune(model_name='gpt2', output_dir='./model_save', num_train_epochs=4, batch_size=2):
-    train = pd.read_csv('/content/drive/MyDrive/SNLP/train_2024.csv')
-    dev = pd.read_csv('/content/drive/MyDrive/SNLP/dev_2024.csv')
-
-    train['text'] = train['text'].apply(normalizeString)
-    train['text'] = train['text'].apply(unicodeToAscii)
-
-    dev['text'] = dev['text'].apply(normalizeString)
-    dev['text'] = dev['text'].apply(unicodeToAscii)
-
-    train['text'] = train.apply(add_labels, axis=1)
-    dev['text'] = dev.apply(add_labels, axis=1)
-
-    train['text'].to_csv('/content/drive/MyDrive/SNLP/train_dataset.txt', index=False, header=False)
-    dev['text'].to_csv('/content/drive/MyDrive/SNLP/dev_dataset.txt', index=False, header=False)
-
+    
     tokenizer = GPT2Tokenizer.from_pretrained(model_name)
     model = GPT2LMHeadModel.from_pretrained(model_name)
 
-    train_dataset = TextDataset(tokenizer=tokenizer, file_path='train_dataset.txt', block_size=128)
-    dev_dataset = TextDataset(tokenizer=tokenizer, file_path='dev_dataset.txt', block_size=128)
-    data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+    if tokenizer.pad_token is None:
+      tokenizer.add_special_tokens({'pad_token': '<|endoftext|>'})
+
+    model.resize_token_embeddings(len(tokenizer))
+
+    train_dataset = CustomTextDataset(tokenizer=tokenizer, filename='preprocessed_text.txt', block_size=128)
+    dev_dataset = CustomTextDataset(tokenizer=tokenizer, filename='preprocessed_eval.txt', block_size=128)
+    data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False, pad_to_multiple_of=8)
 
 
     training_args = TrainingArguments(
@@ -95,7 +134,7 @@ def predict(model, tokenizer, input_text, max_length=160, num_return_sequences=3
 
 model, tokenizer = fine_tune()
 
-input_text = "<|startoftext|><|1|> <|startoftext|><|1|>"
+input_text = "<|startoftext|><|1|>"
 generated_texts = predict(model, tokenizer, input_text)
 for text in generated_texts:
     print(text)
